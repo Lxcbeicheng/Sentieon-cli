@@ -306,9 +306,13 @@ class CoverageMetrics(BaseAlgo):
         self,
         output: pathlib.Path,
         omit_base_output: bool = True,
+        min_map_qual: int = 0,
+        min_base_qual: int = 0,
     ):
         self.output = output
         self.omit_base_output = omit_base_output
+        self.min_map_qual = min_map_qual
+        self.min_base_qual = min_base_qual
 
 
 class HsMetricAlgo(BaseAlgo):
