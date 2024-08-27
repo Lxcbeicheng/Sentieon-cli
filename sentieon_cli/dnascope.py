@@ -184,6 +184,7 @@ def dedup_and_metrics(
     reference: pathlib.Path,
     sample_input: List[pathlib.Path],
     bed: Optional[pathlib.Path] = None,
+    metrics_value: List[str] = None,
     cores: int = mp.cpu_count(),
     duplicate_marking: str = "markdup",
     assay: str = "WGS",
@@ -292,8 +293,9 @@ def dedup_and_metrics(
     # Run WgsMetricsAlgo after duplicate marking to account for duplicate reads
     if assay == "WGS":
         driver.add_algo(InsertSizeMetricAlgo(is_metrics))
-        driver.add_algo(WgsMetricsAlgo(wgs_metrics, include_unpaired="true"))
-        driver.add_algo(CoverageMetrics(coverage_metrics))
+        metrics_values=metrics_value.split(",")
+        driver.add_algo(WgsMetricsAlgo(wgs_metrics, include_unpaired=metrics_values[0],min_map_qual=int(metrics_values[1]),min_base_qual=int(metrics_values[2])))
+        driver.add_algo(CoverageMetrics(coverage_metrics,min_map_qual=int(metrics_values[3]),min_base_qual=int(metrics_values[4])))
         run(shlex.join(driver.build_cmd()))
 
         # Rehead WGS metrics so they are recognized by MultiQC
@@ -611,6 +613,10 @@ def call_variants(
     help=argparse.SUPPRESS,
     action="store_true",
 )
+@arg(
+    "--metrics_value",
+    help="WgsMetricsAlgo.include_unpaired,WgsMetricsAlgo.min_map_qual,WgsMetricsAlgo.min_base_qual,CoverageMetrics.min_map_qual,CoverageMetrics.min_base_qual",
+)
 def dnascope(
     output_vcf: pathlib.Path,
     reference: Optional[pathlib.Path] = None,
@@ -618,6 +624,7 @@ def dnascope(
     r1_fastq: Optional[List[pathlib.Path]] = None,
     r2_fastq: Optional[List[pathlib.Path]] = None,
     readgroups: Optional[List[str]] = None,
+    metrics_value: Optional[List[str]] = None,
     model_bundle: Optional[pathlib.Path] = None,
     dbsnp: Optional[pathlib.Path] = None,  # pylint: disable=W0613
     bed: Optional[pathlib.Path] = None,
